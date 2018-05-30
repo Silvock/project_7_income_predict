@@ -71,6 +71,15 @@ def verif_doublon(data, namedf=''):
     else:
         print('Suppression des doublons ?')
 
+def analyse_val_aberrantes(data):
+    for variable in data.columns:
+
+        if (data[variable].dtype == 'int64') or (data[variable].dtype == 'float64'):
+            plt.figure(figsize=(10, 10))
+            plt.subplot()
+            sns.boxplot(data[variable])
+
+
 def analyse_univarie(data,moncaract='',typecaract=''):
     """Construit une analyse univarie selon le type de variable
     - Distribution empirique 
@@ -575,25 +584,37 @@ def analyse_qte_qte(data,nomcaract1,typecaract1,nomcaract2,typecaract2):
             image.savefig('{}/{}'.format(chemin,titre))
         else:
             print("Pas de sauvegarde")
-        
-        # Analyse de la corrélation
-        coef_corr_pearson = round(st.pearsonr(data[nomcaract1],data[nomcaract2])[0],2)
-        print("Le coefficient de corrélation (Pearson) est égal à {}".format(coef_corr_pearson))
-        if coef_corr_pearson <= 0 and coef_corr_pearson > -0.40:
-            print('Les variables ne sont pas négativement corrélées car {} est supérieur à -0,40'.format(coef_corr_pearson))
-        elif coef_corr_pearson < -0.60:
-            print('Les variables sont négativement corrélées car {} est inférieur à -0,60'.format(coef_corr_pearson))
-        elif coef_corr_pearson >= 0 and coef_corr_pearson < 0.40:
-            print('Les variables ne sont pas positivement corrélées car {} est inférieur à 0,40'.format(coef_corr_pearson))
-        elif coef_corr_pearson > 0.60:
-            print('Les variables sont corrélées positivement car {} est supérieur à 0,60'.format(coef_corr_pearson))
-        else:
-            seuil_confiance = float(input('Choisir un seuil de confiance 0.1 ou 0.05 :'))
-            p_value = round(st.pearsonr(data[nomcaract1],data[nomcaract2])[1],2)
-            if p_value < seuil_confiance:
-                print('On retient H1 : Les variables sont corrélées car {} (p-valeur) est inférieure à {} (seuil de confiance)'.format(p_value,seuil_confiance))
+
+        question = str(input("Voulez-vous afficher l'analyse de la corrélation ? (y/n)"))
+        if question == 'y':
+            # Analyse de la corrélation
+            coef_corr_pearson = round(st.pearsonr(data[nomcaract1], data[nomcaract2])[0], 2)
+            print("Le coefficient de corrélation (Pearson) est égal à {}".format(coef_corr_pearson))
+            if coef_corr_pearson <= 0 and coef_corr_pearson > -0.40:
+                print('Les variables ne sont pas négativement corrélées car {} est supérieur à -0,40'.format(
+                    coef_corr_pearson))
+            elif coef_corr_pearson < -0.60:
+                print(
+                    'Les variables sont négativement corrélées car {} est inférieur à -0,60'.format(coef_corr_pearson))
+            elif coef_corr_pearson >= 0 and coef_corr_pearson < 0.40:
+                print('Les variables ne sont pas positivement corrélées car {} est inférieur à 0,40'.format(
+                    coef_corr_pearson))
+            elif coef_corr_pearson > 0.60:
+                print('Les variables sont corrélées positivement car {} est supérieur à 0,60'.format(coef_corr_pearson))
             else:
-                print('On retient H0 : Les variables ne sont pas corrélées car {} (p-valeur) est supérieure à {} (seuil de confiance)'.format(p_value,seuil_confiance))
+                seuil_confiance = float(input('Choisir un seuil de confiance 0.1 ou 0.05 :'))
+                p_value = round(st.pearsonr(data[nomcaract1], data[nomcaract2])[1], 2)
+                if p_value < seuil_confiance:
+                    print(
+                        'On retient H1 : Les variables sont corrélées car {} (p-valeur) est inférieure à {} (seuil de confiance)'.format(
+                            p_value, seuil_confiance))
+                else:
+                    print(
+                        'On retient H0 : Les variables ne sont pas corrélées car {} (p-valeur) est supérieure à {} (seuil de confiance)'.format(
+                            p_value, seuil_confiance))
+        else:
+            print("Affichage de l'analyse de corrélation non demandé...")
+
 def analyse_qte_qual(data,nomcaract1,typecaract1,nomcaract2,typecaract2):
  # Représentation
         fig= plt.figure(figsize=(20,20))
@@ -633,37 +654,42 @@ def analyse_qte_qual(data,nomcaract1,typecaract1,nomcaract2,typecaract2):
             image.savefig('{}/{}'.format(chemin,titre))
         else:
             print("Pas de sauvegarde")
-        
-        # Analyse de la corrélation
-        x= data[nomcaract1]
-        y= data[nomcaract2]
-        
-        moyenne_y = y.mean()
-        classes = []
-        for classe in x.unique():
-            yi_classe = y[x==classe]
-            classes.append({'ni': len(yi_classe),
-                            'moyenne_classe': yi_classe.mean()})
-        SCT = sum([(yj-moyenne_y)**2 for yj in y])
-        SCE = sum([c['ni']*(c['moyenne_classe']-moyenne_y)**2 for c in classes])
-        eta_squared= SCE/SCT
-        print("Le coefficient de corrélation (eta-squared) est égal à {}".format(eta_squared))
-        if eta_squared <=0 and eta_squared > -0.40:
-            print('Les variables ne sont pas négativement corrélées car {} est supérieur à -0,40'.format(eta_squared))
-        elif eta_squared < -0.60:
-            print('Les variables sont négativement corrélées car {} est inférieur à -0,60'.format(eta_squared))
-        elif eta_squared >= 0 and eta_squared < 0.40:
-            print('Les variables ne sont pas positivement corrélées car {} est inférieur à 0,40'.format(eta_squared))
-        elif eta_squared > 0.60:
-            print('Les variables sont positivement corrélées car {} est supérieur à 0,60'.format(eta_squared))
-        else:
-            seuil_confiance = float(input('Choisir un seuil de confiance 0.1 ou 0.05 :'))
-            p_value = round(st.pearsonr(data[nomcaract1],data[nomcaract2])[1],2)
-            if p_value < seuil_confiance:
-                print('On retient H1 : Les variables sont corrélées car {} (p-valeur) est inférieure à {} (seuil de confiance)'.format(p_value,seuil_confiance))
+
+
+        question = str(input("Voulez-vous afficher l'analyse de la corrélation ? (y/n)"))
+        if question == 'y':
+            # Analyse de la corrélation
+            x= data[nomcaract1]
+            y= data[nomcaract2]
+
+            moyenne_y = y.mean()
+            classes = []
+            for classe in x.unique():
+                yi_classe = y[x==classe]
+                classes.append({'ni': len(yi_classe),
+                                'moyenne_classe': yi_classe.mean()})
+            SCT = sum([(yj-moyenne_y)**2 for yj in y])
+            SCE = sum([c['ni']*(c['moyenne_classe']-moyenne_y)**2 for c in classes])
+            eta_squared= SCE/SCT
+            print("Le coefficient de corrélation (eta-squared) est égal à {}".format(eta_squared))
+            if eta_squared <=0 and eta_squared > -0.40:
+                print('Les variables ne sont pas négativement corrélées car {} est supérieur à -0,40'.format(eta_squared))
+            elif eta_squared < -0.60:
+                print('Les variables sont négativement corrélées car {} est inférieur à -0,60'.format(eta_squared))
+            elif eta_squared >= 0 and eta_squared < 0.40:
+                print('Les variables ne sont pas positivement corrélées car {} est inférieur à 0,40'.format(eta_squared))
+            elif eta_squared > 0.60:
+                print('Les variables sont positivement corrélées car {} est supérieur à 0,60'.format(eta_squared))
             else:
-                print('On retient H0 : Les variables ne sont pas corrélées car {} (p-valeur) est supérieure à {} (seuil de confiance)'.format(p_value,seuil_confiance))
-    
+                seuil_confiance = float(input('Choisir un seuil de confiance 0.1 ou 0.05 :'))
+                p_value = round(st.pearsonr(data[nomcaract1],data[nomcaract2])[1],2)
+                if p_value < seuil_confiance:
+                    print('On retient H1 : Les variables sont corrélées car {} (p-valeur) est inférieure à {} (seuil de confiance)'.format(p_value,seuil_confiance))
+                else:
+                    print('On retient H0 : Les variables ne sont pas corrélées car {} (p-valeur) est supérieure à {} (seuil de confiance)'.format(p_value,seuil_confiance))
+        else:
+            print("Affichage de l'analyse de corrélation non demandé...")
+
 def analyse_qual_qual(data,nomcaract1,typecaract1,nomcaract2,typecaract2):
       
         X = nomcaract1
